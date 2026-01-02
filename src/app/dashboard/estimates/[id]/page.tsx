@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { getWoodPriceList } from '@/lib/scopeOfWork'
 
@@ -38,8 +38,8 @@ interface Estimate {
   }
 }
 
-export default function EstimateDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
+export default function EstimateDetailPage() {
+  const params = useParams()
   const router = useRouter()
   const [estimate, setEstimate] = useState<Estimate | null>(null)
   const [loading, setLoading] = useState(true)
@@ -48,7 +48,7 @@ export default function EstimateDetailPage({ params }: { params: Promise<{ id: s
   useEffect(() => {
     async function fetchEstimate() {
       try {
-        const res = await fetch(`/api/estimates/${resolvedParams.id}`)
+        const res = await fetch(`/api/estimates/${params.id}`)
         const data = await res.json()
 
         if (!res.ok) {
@@ -65,7 +65,7 @@ export default function EstimateDetailPage({ params }: { params: Promise<{ id: s
     }
 
     fetchEstimate()
-  }, [resolvedParams.id, router])
+  }, [params.id, router])
 
   const generatePDF = async () => {
     if (!estimate) return
