@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int        @id @default(autoincrement())
+  email           String     @unique
+  passwordHash    String     @map("password_hash")
+  businessName    String     @map("business_name")
+  businessAddress String     @map("business_address")
+  businessPhone   String?    @map("business_phone")
+  repName         String     @map("rep_name")
+  logoUrl         String?    @map("logo_url")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  
+  customers       Customer[]
+  estimates       Estimate[]
+  
+  @@map("users")
+}
+
+model Customer {
+  id          Int          @id @default(autoincrement())
+  userId      Int          @map("user_id")
+  name        String
+  phone       String
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobAddresses JobAddress[]
+  estimates   Estimate[]
+  
+  @@map("customers")
+}
+
+model JobAddress {
+  id              Int        @id @default(autoincrement())
+  customerId      Int        @map("customer_id")
+  streetAddress   String     @map("street_address")
+  city            String
+  state           String
+  zip             String
+  aerialImageUrl  String?    @map("aerial_image_url")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  
+  customer        Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  estimates       Estimate[]
+  
+  @@map("job_addresses")
+}
+
+model Estimate {
+  id              Int        @id @default(autoincrement())
+  userId          Int        @map("user_id")
+  customerId      Int        @map("customer_id")
+  jobAddressId    Int        @map("job_address_id")
+  roofingType     String     @default("shingles") @map("roofing_type")
+  hasAcUnit       Boolean    @default(false) @map("has_ac_unit")
+  hasFlatSection  Boolean    @default(false) @map("has_flat_section")
+  pricingMethod   String     @map("pricing_method") // 'manual' or 'calculated'
+  manualPrice     Decimal?   @map("manual_price") @db.Decimal(10, 2)
+  pricePerSquare  Decimal?   @map("price_per_square") @db.Decimal(10, 2)
+  totalSquares    Decimal?   @map("total_squares") @db.Decimal(10, 2)
+  wastePercentage Decimal?   @map("waste_percentage") @db.Decimal(5, 2)
+  totalPrice      Decimal    @map("total_price") @db.Decimal(10, 2)
+  scopeOfWork     String     @map("scope_of_work") @db.Text
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer        Customer   @relation(fields: [customerId], references: [id])
+  jobAddress      JobAddress @relation(fields: [jobAddressId], references: [id])
+  
+  @@map("estimates")
+}
